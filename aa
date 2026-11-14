@@ -1,0 +1,45 @@
+import cv2
+import numpy as np
+import os
+
+# Load the source image
+image_path = "1_2.jpg"
+img = cv2.imread(image_path)
+if img is None:
+    raise FileNotFoundError(f"Could not find {image_path}")
+
+h, w, _ = img.shape
+os.makedirs("exported_elements", exist_ok=True)
+
+# Normalized bounding boxes [ymin, xmin, ymax, xmax] (0.0 to 1.0)
+elements = {
+    "01_top_note.png": [0.02, 0.39, 0.19, 0.55],
+    "02_phone_addiction_note.png": [0.20, 0.21, 0.32, 0.31],
+    "03_procrastination_note.png": [0.27, 0.69, 0.37, 0.82],
+    "04_negative_thoughts_note.png": [0.60, 0.21, 0.72, 0.31],
+    "05_bad_habits_note.png": [0.65, 0.70, 0.77, 0.80],
+    "06_break_the_cycle_note.png": [0.85, 0.46, 0.98, 0.55],
+    "07_central_green_board.png": [0.22, 0.35, 0.81, 0.64],
+    "08_magnifying_glass.png": [0.61, 0.32, 0.95, 0.45],
+    "09_string_top_left.png": [0.31, 0.29, 0.39, 0.36],
+    "10_string_bottom_left.png": [0.55, 0.27, 0.62, 0.36],
+    "11_string_top_right.png": [0.35, 0.63, 0.45, 0.72],
+    "12_string_bottom_right.png": [0.58, 0.63, 0.67, 0.73],
+}
+
+for filename, (ymin, xmin, ymax, xmax) in elements.items():
+    # Create a full-size transparent RGBA canvas (maintains exact aspect ratio & position)
+    canvas = np.zeros((h, w, 4), dtype=np.uint8)
+    
+    # Convert normalized coordinates to pixel coordinates
+    y1, x1 = int(ymin * h), int(xmin * w)
+    y2, x2 = int(ymax * h), int(xmax * w)
+    
+    # Copy the BGR pixels into the exact position on the transparent canvas
+    canvas[y1:y2, x1:x2, :3] = img[y1:y2, x1:x2]
+    # Set alpha channel to 255 (opaque) for the isolated region
+    canvas[y1:y2, x1:x2, 3] = 255
+    
+    output_path = os.path.join("exported_elements", filename)
+    cv2.imwrite(output_path, canvas)
+    print(f"Exported: {output_path}")
